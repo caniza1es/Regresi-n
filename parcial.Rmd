@@ -1,0 +1,164 @@
+---
+title: "Análisis de Agrupamiento con K-Means"
+author: "Tu Nombre"
+date: "`r format(Sys.Date(), '%d de %B, %Y')`"
+output: html_document
+---
+
+```{r}
+library(ggplot2)
+library(plotly)
+library(stats)
+library(dplyr)
+```
+
+## Generar Datos Aleatorios
+
+```{r}
+set.seed(123)
+grupo1 <- data.frame(x = rnorm(100, mean = 0, sd = 1),
+                     y = rnorm(100, mean = 0, sd = 1),
+                     z = rnorm(100, mean = 0, sd = 1))
+
+grupo2 <- data.frame(x = rnorm(100, mean = 3, sd = 1),
+                     y = rnorm(100, mean = 3, sd = 1),
+                     z = rnorm(100, mean = 3, sd = 1))
+
+
+datos <- rbind(grupo1, grupo2)
+
+```
+
+```{r}
+datos <- rbind(grupo1, grupo2)
+```
+
+```{r}
+plot_ly(data = datos, x = ~x, y = ~y, z = ~z, color = I("black"), marker = list(size = 3)) %>%
+  add_markers() %>%
+  layout(scene = list(xaxis = list(title = "Variable X"),
+                      yaxis = list(title = "Variable Y"),
+                      zaxis = list(title = "Variable Z"),
+                      aspectmode = "cube"),
+         title = "Datos Generados")
+```
+```{r}
+k <- 2 
+kmeans_result <- kmeans(datos, centers = k)
+
+
+cluster_labels <- kmeans_result$cluster
+
+
+etiquetas_reales <- c(rep(1, 100), rep(2, 100))
+
+
+
+
+
+plot(datos, col = cluster_labels, pch = 19, main = "Clustering con k-means")
+points(kmeans_result$centers, col = 1:k, pch = 8, cex = 2)
+
+puntos_mal_clasificados <- sum(cluster_labels != etiquetas_reales)
+accuracy <- 1 - puntos_mal_clasificados / length(etiquetas_reales)
+```
+```{r}
+
+puntos_mal_clasificados <- sum(cluster_labels != etiquetas_reales)
+accuracy <- 1 - puntos_mal_clasificados / length(etiquetas_reales)
+cat("Número de puntos mal clasificados:", puntos_mal_clasificados, "\n")
+cat("Accuracy:", accuracy, "\n")
+```
+
+```{r}
+realizar_experimentos <- function(distancias, repeticiones = 500) {
+  resultados <- data.frame(distancia = numeric(), accuracy_kmeans = numeric(), accuracy_hclust = numeric())
+  
+  for (distancia in distancias) {
+    accuracies_kmeans <- numeric(repeticiones)
+    accuracies_hclust <- numeric(repeticiones)
+    
+    for (i in 1:repeticiones) {
+      
+      grupo1 <- data.frame(x = rnorm(100, mean = 0, sd = 1), y = rnorm(100, mean = 0, sd = 1), z = rnorm(100, mean = 0, sd = 1))
+      grupo2 <- data.frame(x = rnorm(100, mean = distancia, sd = 1), y = rnorm(100, mean = distancia, sd = 1), z = rnorm(100, mean = distancia, sd = 1))
+      datos <- rbind(grupo1, grupo2)
+      etiquetas_reales <- c(rep(1, 100), rep(2, 100))
+      
+
+      kmeans_result <- kmeans(datos, centers = 2)
+      accuracies_kmeans[i] <- sum(kmeans_result$cluster == etiquetas_reales) / length(etiquetas_reales)
+
+      dist_mat <- dist(datos)
+      hclust_result <- hclust(dist_mat)
+      clusters_hclust <- cutree(hclust_result, k = 2)
+      
+      if (mean(clusters_hclust == etiquetas_reales) < 0.5) {
+        clusters_hclust <- ifelse(clusters_hclust == 1, 2, 1)
+      }
+      accuracies_hclust[i] <- sum(clusters_hclust == etiquetas_reales) / length(etiquetas_reales)
+    }
+    
+    resultados <- rbind(resultados, data.frame(distancia = distancia, 
+                                                accuracy_kmeans = mean(accuracies_kmeans), 
+                                                accuracy_hclust = mean(accuracies_hclust)))
+  }
+  
+  return(resultados)
+}
+```
+
+```{r}
+distancias <- seq(0.5, 5, by = 0.5)
+resultados_experimentos <- realizar_experimentos(distancias)
+ggplot(resultados_experimentos, aes(x = distancia)) +
+  geom_line(aes(y = accuracy_kmeans, color = "K-Means")) +
+  geom_line(aes(y = accuracy_hclust, color = "Hclust")) +
+  labs(title = "Accuracy vs Distancia Euclidiana entre Centroides",
+       x = "Distancia Euclidiana entre Centroides", y = "Accuracy Promedio") +
+  scale_color_manual(values = c("K-Means" = "blue", "Hclust" = "red")) +
+  theme_minimal()
+```
+
+#Demonstracion
+
+Sea el estimador β^=(X′X)−1(X′Y)β^​=(X′X)−1(X′Y) en la regresión lineal múltiple Y = Xβ + e.
+
+β^ = (X′X)−1(X′Y)
+
+E(β^) = E((X′X)−1(X′Y))
+
+E(β^) = (X′X)−1X′E(Y)
+
+E(β^) = (X′X)−1X′Xβ
+
+E(β^) = β
+
+#Parte 3
+
+## 1. Estimador de \(p_i\)
+
+El estimador de \(p_i\), la probabilidad de que una muestra pertenezca a la categoría i-ésima, se calcula como la fracción de vecinos más cercanos que pertenecen a la clase \(i\) entre los \(k\) vecinos más cercanos.
+
+\[ \hat{p}_i = \frac{\text{Número de vecinos en clase } i}{k} \]
+
+## 2. ¿El Estimador es Insesgado?
+
+El estimador \(\hat{p}_i\) puede no ser insesgado, especialmente para valores pequeños de \(k\) y en presencia de clases desbalanceadas. La razón es que el resultado está altamente influenciado por la elección de \(k\) y la distribución local de las clases, que puede no reflejar la distribución verdadera de la población.
+
+## 3. Selección del Valor Óptimo de \(k\)
+
+El valor óptimo de \(k\) se selecciona comúnmente a través de la validación cruzada, como el remuestreo con reemplazo (bootstrap) o la validación cruzada k-fold. El objetivo es encontrar un balance entre sesgo y varianza, donde un \(k\) muy bajo puede llevar a sobreajuste (alta varianza) y un \(k\) muy alto puede resultar en subajuste (alto sesgo).
+
+## 4. Diferencia entre Clasificación y Agrupamiento
+
+- **Clasificación**: Asigna etiquetas predefinidas a las muestras. Es supervisado, lo que significa que se basa en un conjunto de datos de entrenamiento con etiquetas conocidas.
+- **Agrupamiento**: Agrupa las muestras en conjuntos basados en similitudes sin usar etiquetas. Es no supervisado, ya que no utiliza información etiquetada para formar los grupos.
+
+## 5. Interpretación de los Odds Ratio en la Regresión Logística
+
+En la regresión logística, el odds ratio (OR) para una variable independiente es una medida de cómo la probabilidad de un evento (e.g., pertenecer a una categoría) cambia con una unidad de cambio en esa variable, manteniendo constantes todas las demás variables.
+
+\[ \text{OR} = \exp(\beta_i) \]
+
+Donde \(\beta_i\) es el coeficiente estimado para la variable independiente \(i\). Un OR > 1 indica que el evento es más probable a medida que la variable aumenta, mientras que un OR < 1 sugiere lo contrario.
