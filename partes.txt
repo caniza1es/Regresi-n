@@ -1,0 +1,27 @@
+[Parte 1]
+
+    Generar 2 grupos aleatorios de una normal, como lo generado en clase, con tres variables
+    Hacer el algoritmo de k-means para agrupar esos datos
+    Calcular cuántos de los puntos fueron mal clasificados y calcular el accuracy
+
+[Parte 2]
+
+    Repetir el experimento de la parte 1 500 veces y hacer un montecarlo para el accuracy
+    Hacer variaciones de los centroides para que cada vez estén más cerca y almacenar el accuracy promedio para cada caso
+    Hacer un gráfico de accuracy vs distancia euclidiana entre centroides
+    [Extra]
+    Generar una comparación del accuracy usando el hclust
+
+Parte teórica
+
+    Considera una regresión lineal múltiple bajo las condiciones vistas en clase tal que
+
+Y = Xβ + e. Mostrar que el estimador β^=(X′X)−1(X′Y)β^​=(X′X)−1(X′Y) es un estimador insesgado.
+Punto 3
+3.Considera el algoritmo KNN para la clasificación de N muestras en k clases y el ajuste del valor de k a través de remuestreo con reemplazo. Sea p_i
+La probabilidad de que una muestra pertenezca a la categoría i-ésima.
+1. ¿Cuál es el estimador de pi
+2. ¿Dicho estimador es insesgado?
+3. ¿Cómo se selecciona el valor óptimo de k?
+5. ¿Cuál es la diferencia entre los algoritmos de clasificación y de agrupamiento?
+6. Explicar la interpretación de los odds ratio en la regresión logística
